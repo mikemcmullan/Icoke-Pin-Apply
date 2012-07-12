@@ -1,16 +1,18 @@
 require 'rubygems'
 require 'mechanize'
+#require 'yaml'
+
+@cookie_file = './icoke_cookie.txt'
 
 # Ensure the config file exists and all variables exist.
-unless File.exists?('./config.rb') && !@email && !@password && !@cookie_file
+unless File.exists?('./config.rb')
     puts <<-eos
-Missing config file or missing config variables. Please rename the exaple.config.rb 
-file to config.rb and set your email, password and cookie_file. If your missing the 
-example config it should look like this:
+Missing config file. Please rename the example.config.rb file to config.rb and 
+set your icoke email and password. If your missing the example config it should
+look like this:
 
 @email       = 'your-email'
 @password    = 'your-password'
-@cookie_file = './icoke_cookie.txt'
     eos
     exit!
 else
