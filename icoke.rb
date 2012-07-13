@@ -43,6 +43,11 @@ def icoke_login(agent)
         end
     else
         agent.cookie_jar.load(@cookie_file, :cookiestxt)
+
+        unless agent.get('https://secure.icoke.ca/pin').search('//*[@id="loginModel"]').empty?
+            File.delete @cookie_file
+            icoke_login agent
+        end
     end
 end
 
