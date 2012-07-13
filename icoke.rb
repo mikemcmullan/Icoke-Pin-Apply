@@ -1,8 +1,8 @@
 require 'rubygems'
 require 'mechanize'
-#require 'yaml'
 
 @cookie_file = './icoke_cookie.txt'
+@display_log = true
 
 # Ensure the config file exists and all variables exist.
 unless File.exists?('./config.rb')
@@ -19,8 +19,18 @@ else
     require './config.rb'
 end
 
-def icoke_login(agent)
+def log msg, display_log = true    
+    display_log = false if @display_log === false
+    puts msg if display_log
+end
+
+def reset_cookie
+    File.delete @cookie_file if File.exists?(@cookie_file)
+end
+
+def icoke_login agent
     unless File.exists?(@cookie_file)
+        log ' - Requesting login page.'
         login_form  = agent.get('https://secure.icoke.ca/account/login').forms.first
 
         login_form.emailAddress = @email
@@ -28,6 +38,7 @@ def icoke_login(agent)
 
         login_form.checkbox_with(:name => 'rememberMe').check
 
+        log ' - Submitting login form.'
         login_result = login_form.submit
 
         # Check to see the login failed.
@@ -38,14 +49,18 @@ def icoke_login(agent)
         end
 
         # Save Cookie to file.
+        log ' - Saving cookie to file.'
         File.open(@cookie_file, "w") do |file|
             agent.cookie_jar.dump_cookiestxt(file)
         end
     else
+        log ' - Load cookie file.'
         agent.cookie_jar.load(@cookie_file, :cookiestxt)
 
+        log ' - Checking if cookie is valid.'
         unless agent.get('https://secure.icoke.ca/pin').search('//*[@id="loginModel"]').empty?
-            File.delete @cookie_file
+            log ' - Cookie is not valid. Initializing login.'
+            reset_cookie
             icoke_login agent
         end
     end
@@ -55,7 +70,7 @@ pin         = ARGV.shift
 
 # If pin equals reset then delete the cookie file.
 if pin === 'reset'
-    File.delete @cookie_file if File.exists?(@cookie_file)
+    reset_cookie
     puts 'Cookie file has been deleted, reset successful.'
     exit!
 end
@@ -70,11 +85,14 @@ agent       = Mechanize.new
 
 icoke_login agent
 
+log ' - Requesting pin page.'
 pin_page    = agent.get('https://secure.icoke.ca/pin')
 pnts_before = pin_page.search('//*[@id="balance"]/h2').text
 name        = pin_page.search('//*[@id="points"]/h3').text
 pin_form    = pin_page.forms.first
 pin_form.pin= pin
+
+log ' - Submitting pin form.'
 pin_results = pin_form.submit
 
 pnts_after  = pin_results.search('//*[@id="balance"]/h2').text
