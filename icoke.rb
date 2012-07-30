@@ -1,11 +1,15 @@
+#!/usr/bin/env ruby
+
 require 'rubygems'
 require 'mechanize'
 
-@cookie_file = './icoke_cookie.txt'
+@tmpdir      = `echo $TMPDIR`
+@cookie_file = @tmpdir + 'icoke_cookie.txt'
+@config_file = File.dirname(__FILE__) + '/config.rb'
 @display_log = true
 
 # Ensure the config file exists and all variables exist.
-unless File.exists?('./config.rb')
+unless File.exists?(@config_file)
     puts <<-eos
 Missing config file. Please rename the example.config.rb file to config.rb and 
 set your icoke email and password. If your missing the example config it should
@@ -16,7 +20,7 @@ look like this:
     eos
     exit!
 else
-    require './config.rb'
+    require @config_file
 end
 
 def log msg, display_log = true    
